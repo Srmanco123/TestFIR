@@ -8,6 +8,9 @@ Tests infinitos con los exámenes oficiales del FIR (Farmacéutico Interno Resid
 - Teclado: `1`–`4` para responder, `Enter` para la siguiente.
 - **Simulacro**: examen real completo de un año, con su tiempo oficial, pausa y nota neta (3 / −1; las anuladas se sustituyen por reservas).
 - **Falladas**: lista de lo que más fallas, con respuesta y explicación.
+- **Marcadas ★**: marca preguntas (botón ☆ o tecla `M`) y practícalas aparte (modo «★ Marcadas»).
+- **Libros**: elige uno o varios libros desde la pantalla de practicar; por defecto, examen completo.
+- **Corregir el libro** de una pregunta tocando su etiqueta ✎; la corrección se guarda y se sincroniza.
 - **Objetivo diario** y racha de días.
 - **Sincronización** opcional entre dispositivos mediante un Gist secreto de GitHub (token con permiso `gist`; se guarda solo en el navegador).
 - Instalable como app (PWA) y utilizable sin conexión.

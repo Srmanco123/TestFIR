@@ -103,7 +103,18 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
 .small{font-size:.8125rem;color:var(--muted);margin:0}
 .toast{position:fixed;z-index:40;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r-8);font-size:.875rem;transition:transform var(--t);white-space:nowrap}
 .toast.on{transform:translate(-50%,0)}
-.book{display:flex;align-items:center;gap:8px;margin:0 4px 12px;font-size:.8125rem;color:var(--muted)}.book select{flex:1;font:inherit;font-size:16px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.book{margin:0 4px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.book summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:46px;padding:6px 14px}
+.book summary::-webkit-details-marker{display:none}.book summary::after{content:'▾';margin-left:auto;color:var(--muted)}.book[open] summary::after{content:'▴'}
+.book summary b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bookin{padding:0 12px 12px}.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9999px;padding:6px 12px;min-height:40px;font-size:.875rem;cursor:pointer;user-select:none}
+.chips label:has(input:checked){background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chips input{position:absolute;opacity:0;pointer-events:none}.chips span{opacity:.7;font:500 .75rem "JetBrains Mono",monospace}
+.meta .star{margin-left:auto;min-height:36px;min-width:40px;padding:0 8px;border:0;background:none;font-size:1.25rem;line-height:1;color:var(--muted)}
+.meta .star[aria-pressed=true]{color:var(--acc1)}
+.meta .tagm{min-height:0;padding:2px 8px;border-radius:9999px;font:inherit;font-size:.75rem;color:var(--muted);background:none;border:1px solid var(--line);cursor:pointer}
+.meta select{min-height:32px;padding:2px 8px;font:inherit;font-size:16px;border-radius:8px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);max-width:100%}
 .tabs{display:flex;justify-content:center;margin:4px 0 12px}
 .goal{display:flex;align-items:center;gap:8px;margin:0 4px 14px;font-size:.75rem;color:var(--muted);flex-wrap:wrap}
 .goal s{flex:1;min-width:60px;height:8px;border-radius:9999px;background:var(--line);overflow:hidden;text-decoration:none}
@@ -143,7 +154,8 @@ select{min-height:44px}
 <main>
   <div class="tabs"><div class="pill" id="view"><i></i><button data-v="prac" aria-pressed="true">Practicar</button><button data-v="sim" aria-pressed="false">Simulacro</button><button data-v="fail" aria-pressed="false">Falladas</button></div></div>
   <div id="vPrac">
-  <div class="book"><label for="bookSel">Libro</label><select id="bookSel" aria-label="Libro del que salen las preguntas"></select></div>
+  <details class="book" id="bookBox"><summary><span class="small">Libros</span> <b id="bookSum">Todos</b></summary>
+    <div class="bookin"><div class="row"><button id="bkAll">Todos · examen completo</button><button id="bkNone">Ninguno</button></div><div class="chips" id="bookChips"></div></div></details>
   <div class="streak"><span>Racha</span><span class="cells" id="cells"></span><span class="mono" id="stN">0</span><span style="margin-left:auto" class="mono" id="best">mejor 0</span></div>
   <div class="goal"><span>Hoy</span><s><i id="gBar"></i></s><b class="mono" id="gTxt">0 / 25</b><span class="gcal" id="gCal"></span><span class="mono" id="gStreak"></span></div>
   <section class="card" id="card" aria-live="polite"><div class="empty">Cargando preguntas…</div></section>
@@ -163,12 +175,13 @@ select{min-height:44px}
 <aside class="panel" id="panel" aria-label="Ajustes" aria-hidden="true"><div class="in">
   <div class="row" style="justify-content:space-between"><h2 style="font-size:1.375rem;margin:0">Ajustes</h2><button id="closeSet">Cerrar</button></div>
   <div><h2>Qué preguntas salen</h2>
-    <div class="pill" id="mode"><i></i><button data-v="mix" aria-pressed="true">Mezcla</button><button data-v="rev" aria-pressed="false">Solo repaso</button><button data-v="new" aria-pressed="false">Solo nuevas</button></div>
+    <div class="pill" id="mode"><i></i><button data-v="mix" aria-pressed="true">Mezcla</button><button data-v="rev" aria-pressed="false">Solo repaso</button><button data-v="new" aria-pressed="false">Solo nuevas</button><button data-v="star" aria-pressed="false">★ Marcadas</button></div>
     <p class="small" style="margin-top:8px" id="modeTxt"></p></div>
   <div><h2>Convocatorias</h2><div class="years" id="years"></div></div>
   <div><h2>Asignaturas <span class="small" id="mSel"></span></h2>
     <div class="years" id="mans"></div>
-    <div class="row" style="margin-top:8px"><button id="mAll">Todas</button><button id="mNone">Ninguna</button></div></div>
+    <div class="row" style="margin-top:8px"><button id="mAll">Todas</button><button id="mNone">Ninguna</button></div>
+    <p class="small" id="fixInfo" style="margin-top:10px"></p></div>
   <div><h2>Tema</h2>
     <div class="pill" id="theme"><i></i><button data-v="auto" aria-pressed="true">Sistema</button><button data-v="light" aria-pressed="false">Claro</button><button data-v="dark" aria-pressed="false">Oscuro</button></div></div>
   <div><h2>Objetivo diario</h2><select id="goalSel"><option>10</option><option>25</option><option>50</option><option>75</option><option>100</option><option>150</option></select> <span class="small">preguntas al día</span></div>
@@ -183,12 +196,12 @@ select{min-height:44px}
       <label class="row" style="cursor:pointer"><button type="button" id="impB">Importar .json</button><input type="file" id="imp" accept=".json,application/json" hidden></label>
       <button id="reset">Borrar progreso</button></div>
     <p class="small" id="lastExp" style="margin-top:8px"></p></div>
-  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_06</span></p>
+  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_07</span></p>
 </div></aside>
 <div class="toast" id="toast" role="status"></div>
 <script>
 {
-const APP_VER='0_06',KEY='firtest:v1';let VIEW='prac';
+const APP_VER='0_07',KEY='firtest:v1';let VIEW='prac';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---------- estado ---------- */
@@ -212,11 +225,12 @@ const stateOf=q=>{const c=S.cards[q.id];if(!c||!c.s)return 'new';if(c.r>=3)retur
 let BANK=[],YEARS=[],MANS=[],cur=null,answered=false,lastId=null;
 const active=()=>BANK.filter(q=>q.c&&(!S.years||S.years.includes(q.y))&&(!S.mans||S.mans.includes(q.m)));
 function pick(){
-  const pool=active();if(!pool.length)return null;
+  let pool=active();if(S.mode==='star')pool=pool.filter(q=>isStar(q.id));if(!pool.length)return null;
   const seen=pool.filter(q=>S.cards[q.id]&&S.cards[q.id].s&&q.id!==lastId);
   const fresh=pool.filter(q=>!(S.cards[q.id]&&S.cards[q.id].s));
   const due=seen.filter(q=>S.cards[q.id].due<=S.turn).sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due);
   const rnd=a=>a[Math.floor(Math.random()*a.length)];
+  if(S.mode==='star'){if(due.length)return due[0];return rnd(fresh.concat(seen))||rnd(pool)}
   if(S.mode==='new')return fresh.length?rnd(fresh):(due[0]||rnd(seen)||null);
   if(S.mode==='rev'){if(due.length)return due[0];const s=[...seen].sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due);return s[0]||rnd(fresh)||null}
   if(due.length)return due[0];
@@ -226,15 +240,15 @@ function pick(){
 /* ---------- pintar pregunta ---------- */
 function render(){
   cur=pick();answered=false;const el=$('card');
-  if(!cur){el.innerHTML='<div class="empty">No hay preguntas con este filtro.<br>Cambia el modo o las convocatorias en ⚙︎.</div>';return}
+  if(!cur){el.innerHTML='<div class="empty">'+(S.mode==='star'?'Aún no has marcado ninguna pregunta.<br>Toca ☆ en una pregunta para guardarla, o cambia el modo en ⚙︎.':'No hay preguntas con este filtro.<br>Cambia los libros, el modo o las convocatorias.')+'</div>';return}
   const st=stateOf(cur),c=S.cards[cur.id];
   const tag=st==='new'?'<span class="tag new">nueva</span>':'<span class="tag rep">repaso · fallada '+c.lp+'×</span>';
-  el.innerHTML='<div class="meta"><span class="mono">FIR '+cur.y+' · '+cur.n+'</span>'+(cur.m?'<span class="tag">'+esc(cur.m)+'</span>':'')+tag+(cur.res?'<span class="tag">reserva</span>':'')+'</div>'+
+  el.innerHTML='<div class="meta"><span class="mono">FIR '+cur.y+' · '+cur.n+'</span>'+'<button class="tagm" id="mFix" title="¿Mal clasificada? Toca para cambiar el libro">'+esc(cur.m||'Sin libro')+' ✎</button>'+tag+(cur.res?'<span class="tag">reserva</span>':'')+starBtn(cur)+'</div>'+
    '<p class="q">'+esc(cur.q)+'</p>'+
    (cur.img?'<figure class="fig"><img src="'+esc(cur.img)+'" alt="Figura de la pregunta '+cur.n+'" loading="eager"></figure>':'')+
    '<div class="ops">'+cur.o.map((o,i)=>'<button class="op" data-i="'+(i+1)+'"><b>'+(i+1)+'</b><span>'+esc(o)+'</span></button>').join('')+'</div>'+
    '<div id="fixBox"></div>'+
-   '<div class="next"><span class="hint kb">Responde con <kbd>1</kbd>–<kbd>4</kbd></span><span></span></div>';
+   '<div class="next"><span class="hint kb">Responde con <kbd>1</kbd>–<kbd>4</kbd> · marca con <kbd>M</kbd></span><span></span></div>';
   el.style.animation='none';void el.offsetWidth;el.style.animation='in .25s both';
 }
 function answer(i){
@@ -281,20 +295,22 @@ function progress(){
 function pill(el,val,on){el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===val)));
   const b=el.querySelector('[aria-pressed=true]'),i=el.querySelector('i');if(b&&b.offsetWidth){i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px'}
   el.onclick=e=>{const t=e.target.closest('button');if(t){on(t.dataset.v);pill(el,t.dataset.v,on)}}}
-const MODE={mix:'Primero lo que toca repasar; si no hay, una nueva al azar.',rev:'Solo preguntas ya vistas, empezando por las que más urge repasar.',new:'Solo preguntas que aún no has visto.'};
+const MODE={mix:'Primero lo que toca repasar; si no hay, una nueva al azar.',rev:'Solo preguntas ya vistas, empezando por las que más urge repasar.',new:'Solo preguntas que aún no has visto.',star:'Solo las preguntas que has marcado con ★, empezando por las que toca repasar.'};
 function settings(){
   pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});$('modeTxt').textContent=MODE[S.mode];
   pill($('theme'),S.theme,v=>{S.theme=v;theme();save()});
   $('years').innerHTML=YEARS.map(y=>'<label><input type="checkbox" value="'+y.y+'" '+(!S.years||S.years.includes(y.y)?'checked':'')+'> <span class="mono">'+y.y+'</span></label>').join('');
   $('mans').innerHTML=MANS.map(m=>'<label><input type="checkbox" value="'+esc(m)+'" '+(!S.mans||S.mans.includes(m)?'checked':'')+'> '+esc(m)+'</label>').join('');
   $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
-  $('goalSel').value=String(S.goal||25);$('lastExp').textContent=S.lastExport?'Última copia: '+new Date(S.lastExport).toLocaleString('es-ES'):'Aún no has exportado ninguna copia.';
+  fixUI();$('goalSel').value=String(S.goal||25);$('lastExp').textContent=S.lastExport?'Última copia: '+new Date(S.lastExport).toLocaleString('es-ES'):'Aún no has exportado ninguna copia.';
 }
 $('years').addEventListener('change',()=>{const v=[...$('years').querySelectorAll('input:checked')].map(x=>+x.value);S.years=v.length===YEARS.length?null:v;save();bookUI();render();progress()});
-function bookUI(){const cnt={};for(const q of BANK)if(q.c&&(!S.years||S.years.includes(q.y)))cnt[q.m]=(cnt[q.m]||0)+1;const tot=Object.values(cnt).reduce((a,b)=>a+b,0);
-  const one=S.mans&&S.mans.length===1?S.mans[0]:null,multi=S.mans&&S.mans.length!==1;
-  $('bookSel').innerHTML='<option value="">Todos los libros · examen completo ('+tot+')</option>'+(multi?'<option value="*" selected>Selección de '+S.mans.length+' libros (Ajustes)</option>':'')+MANS.map(m=>'<option value="'+esc(m)+'"'+(m===one?' selected':'')+'>'+esc(m)+' ('+(cnt[m]||0)+')</option>').join('')}
-$('bookSel').onchange=e=>{const v=e.target.value;if(v==='*')return;setMans(v?[v]:null,1)};
+function bookUI(){const cnt={};for(const q of BANK)if(q.c&&(!S.years||S.years.includes(q.y)))cnt[q.m]=(cnt[q.m]||0)+1;
+  const sel=S.mans||MANS,n=sel.reduce((a,m)=>a+(cnt[m]||0),0);
+  $('bookSum').textContent=!S.mans?'Todos · examen completo ('+n+')':!S.mans.length?'Ninguno':S.mans.length===1?S.mans[0]+' ('+n+')':S.mans.length+' libros ('+n+')';
+  $('bookChips').innerHTML=MANS.map(m=>'<label><input type="checkbox" value="'+esc(m)+'"'+(sel.includes(m)?' checked':'')+'>'+esc(m)+' <span>'+(cnt[m]||0)+'</span></label>').join('')}
+$('bookChips').addEventListener('change',()=>setMans([...$('bookChips').querySelectorAll('input:checked')].map(x=>x.value),1));
+$('bkAll').onclick=()=>setMans(null,1);$('bkNone').onclick=()=>setMans([],1);
 function setMans(v,redraw){S.mans=(v&&v.length===MANS.length)?null:v;save();bookUI();
   $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
   if(redraw)$('mans').querySelectorAll('input').forEach(x=>x.checked=!S.mans||S.mans.includes(x.value));
@@ -395,8 +411,10 @@ function viewKey(e){if(VIEW!=='sim'||!S.sim)return;const s=S.sim,qs=simQs(s.y),q
 function qDetail(q,extra){return '<details class="qd"><summary><span class="mono small">FIR '+q.y+' · '+q.n+(extra?' · '+esc(extra):'')+'</span><br>'+esc(q.q)+'</summary>'+
   (q.img?'<figure class="fig"><img src="'+esc(q.img)+'" alt="Figura" loading="lazy"></figure>':'')+
   '<div class="op ok" style="margin-top:8px"><b>'+q.c+'</b><span>'+esc(q.o[q.c-1])+'</span></div>'+(q.e?'<p class="small" style="margin-top:8px;color:var(--ink)">'+esc(q.e)+'</p>':'')+'</details>'}
-function failRender(){const L=BANK.filter(q=>q.c&&S.cards[q.id]&&S.cards[q.id].lp>0).sort((a,b)=>S.cards[b.id].lp-S.cards[a.id].lp||S.cards[a.id].r-S.cards[b.id].r);
-  $('vFail').innerHTML='<section class="card"><h2 style="font-size:1.125rem;margin:0 0 4px">Tus falladas <span class="small">('+L.length+')</span></h2>'+
+function failRender(){const M=BANK.filter(q=>q.c&&isStar(q.id));
+  const mk=M.length?'<section class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between"><h2 style="font-size:1.125rem;margin:0">★ Marcadas <span class="small">('+M.length+')</span></h2><button class="pri" id="practStar">Practicar marcadas</button></div>'+M.map(q=>qDetail(q,q.m)).join('')+'</section>':'';
+  const L=BANK.filter(q=>q.c&&S.cards[q.id]&&S.cards[q.id].lp>0).sort((a,b)=>S.cards[b.id].lp-S.cards[a.id].lp||S.cards[a.id].r-S.cards[b.id].r);
+  $('vFail').innerHTML=mk+'<section class="card"><h2 style="font-size:1.125rem;margin:0 0 4px">Tus falladas <span class="small">('+L.length+')</span></h2>'+
    (L.length?'<p class="small">Ordenadas por número de fallos. Toca una para ver la respuesta y la explicación.</p>'+L.slice(0,150).map(q=>qDetail(q,q.m+' · fallada '+S.cards[q.id].lp+'×'+(S.cards[q.id].r>=3?' · ya dominada':''))).join('')+(L.length>150?'<p class="small">Se muestran las 150 primeras.</p>':'')
      :'<div class="empty">Aún no has fallado ninguna pregunta.</div>')+'</section>'}
 /* ---------- sincronización con GitHub (Gist secreto) ---------- */
@@ -412,7 +430,7 @@ function mergeState(R){if(!R||!R.cards)return;
   S.turn=Math.max(S.turn,R.turn||0);S.best=Math.max(S.best,R.best||0);S.days=S.days||{};
   for(const [d,v] of Object.entries(R.days||{}))S.days[d]=Math.max(S.days[d]||0,v);
   const seen=new Set((S.sims||[]).map(x=>x.y+'-'+x.d));S.sims=(S.sims||[]).concat((R.sims||[]).filter(x=>!seen.has(x.y+'-'+x.d))).sort((a,b)=>b.d-a.d);
-  if(!S.sim&&R.sim)S.sim=R.sim;if(!S.simRes&&R.simRes)S.simRes=R.simRes}
+  mergeMarks(R);if(!S.sim&&R.sim)S.sim=R.sim;if(!S.simRes&&R.simRes)S.simRes=R.simRes}
 let pushT=null,syncing=false,dirty=false;
 function syncStatus(t){const el=$('ghSt');if(el)el.textContent=t}
 function syncDirty(){if(!GH.token||!GH.gist)return;dirty=true;clearTimeout(pushT);pushT=setTimeout(syncPush,20000)}
@@ -433,6 +451,29 @@ $('ghNow').onclick=async()=>{try{await syncPull();dirty=true;await syncPush();ta
 $('ghBye').onclick=()=>{GH={};ghSave();$('ghSt').textContent='';syncUI();toast('Sincronización desactivada en este dispositivo')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(S.sim)save();if(dirty){clearTimeout(pushT);syncPush()}}else if(GH.gist&&Date.now()-(GH.last||0)>120000)syncStart()});
 $('goalSel').onchange=e=>{S.goal=+e.target.value;save();goalUI()};
+
+/* ================= v0_07 · estrella, libro corregido a mano ================= */
+const isStar=id=>!!(S.star&&S.star[id]&&S.star[id].v);
+function starBtn(q){const on=isStar(q.id);return '<button class="star" id="starB" aria-pressed="'+on+'" aria-label="'+(on?'Quitar marca':'Marcar pregunta')+'" title="Marcar para repasar (tecla M)">'+(on?'★':'☆')+'</button>'}
+function toggleStar(){if(!cur)return;S.star=S.star||{};const on=!isStar(cur.id);S.star[cur.id]={v:on?1:0,t:Date.now()};save();
+  const b=$('starB');if(b){b.textContent=on?'★':'☆';b.setAttribute('aria-pressed',String(on))}toast(on?'★ Marcada':'Marca quitada')}
+function applyFix(){const F=S.fix||{};for(const q of BANK){if(q.m0===undefined)q.m0=q.m;q.m=(F[q.id]&&F[q.id].m)||q.m0}}
+function fixUI(){const F=Object.entries(S.fix||{}).filter(([,v])=>v.m);const el=$('fixInfo');if(!el)return;
+  el.innerHTML=F.length?'Has corregido el libro de '+F.length+' pregunta'+(F.length>1?'s':'')+'. <button id="fixCopy" style="min-height:36px;margin-left:6px">Copiar lista</button>':'Si ves una pregunta en el libro equivocado, toca su etiqueta ✎ para cambiarla.'}
+$('card').addEventListener('click',e=>{
+  if(e.target.closest('#starB')){toggleStar();return}
+  const f=e.target.closest('#mFix');if(!f||!cur)return;
+  f.outerHTML='<select id="mFixSel" aria-label="Libro de esta pregunta">'+MANS.map(m=>'<option'+(m===cur.m?' selected':'')+'>'+esc(m)+'</option>').join('')+'</select>';
+  const s=$('mFixSel');s.focus();
+  const back=()=>{s.onblur=null;if(s.isConnected)s.outerHTML='<button class="tagm" id="mFix" title="¿Mal clasificada? Toca para cambiar el libro">'+esc(cur.m)+' ✎</button>'};
+  s.onchange=()=>{S.fix=S.fix||{};const q=cur,m=s.value;S.fix[q.id]={m:m===q.m0?null:m,t:Date.now()};applyFix();save();bookUI();progress();back();toast('Libro cambiado a '+q.m)};
+  s.onblur=()=>setTimeout(back,0)});
+document.addEventListener('keydown',e=>{if(VIEW==='prac'&&(e.key==='m'||e.key==='M')&&!e.target.matches('input,textarea,select')&&!$('panel').classList.contains('on'))toggleStar()});
+$('vFail').addEventListener('click',e=>{if(e.target.id==='practStar'){S.mode='star';save();setView('prac');render();toast('Practicando tus marcadas')}});
+$('panel').addEventListener('click',async e=>{if(e.target.id!=='fixCopy')return;
+  const t=Object.entries(S.fix||{}).filter(([,v])=>v.m).map(([id,v])=>{const q=BANK.find(x=>x.id===id);return 'FIR '+id.replace('-',' · ')+' → '+v.m+(q?' (antes: '+q.m0+')':'')}).join('\n');
+  try{await navigator.clipboard.writeText(t);toast('✓ Lista copiada: pégamela en el chat')}catch(err){toast('No se pudo copiar')}});
+function mergeMarks(R){for(const k of ['star','fix']){const a=S[k]=S[k]||{},b=(R&&R[k])||{};for(const [id,v] of Object.entries(b))if(!a[id]||v.t>a[id].t)a[id]=v}applyFix()}
 /* ---------- arranque ---------- */
 theme();tally();
 (async()=>{try{
@@ -441,7 +482,7 @@ theme();tally();
   BANK=sets.flat();if(S.years)S.years=S.years.filter(y=>YEARS.some(x=>x.y===y));if(S.years&&!S.years.length)S.years=null;
   MANS=[...new Set(BANK.map(q=>q.m).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   if(S.mans){S.mans=S.mans.filter(m=>MANS.includes(m));if(!S.mans.length)S.mans=null}
-  bookUI();render();progress();viewInit();syncStart();
+  applyFix();bookUI();render();progress();viewInit();syncStart();
 }catch(e){$('card').innerHTML='<div class="empty">No se pudieron cargar las preguntas ('+esc(e.message)+').</div>'}})();
 }
 </script>
