@@ -20,4 +20,22 @@ Cuadernos oficiales (versión 0) y plantillas definitivas del portal FSE del Min
 
 Formato de `data/<año>.json`: `{id, y, n, q, o[4], c (1-4, null = anulada), img, res (reserva), e (explicación)}`.
 
+## Clasificación por asignatura
+Cada pregunta lleva el campo `m` con el manual AFIR al que corresponde (12 manuales, según amireducacion.com). La clasificación es automática: palabras clave más la estructura por bloques del examen, que agrupa las preguntas por materia. Puede fallar en los bordes entre bloques.
+
+| Manual | Preguntas |
+|---|---|
+| Fisiología, Fisiopatología y Anatomía | 191 |
+| Farmacología | 150 |
+| Microbiología | 122 |
+| Misceláneas | 96 |
+| Química Farmacéutica | 80 |
+| Bioquímica | 79 |
+| Técnicas Instrumentales | 79 |
+| Biofarmacia | 63 |
+| Físico-Químicas | 52 |
+| Tecnología Farmacéutica | 50 |
+| Biología Molecular | 46 |
+| Inmunología | 42 |
+
 Las explicaciones son breves y de estudio; ante duda, manda la bibliografía.

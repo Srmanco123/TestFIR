@@ -101,6 +101,12 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
 .toast{position:fixed;z-index:40;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r-8);font-size:.875rem;transition:transform var(--t);white-space:nowrap}
 .toast.on{transform:translate(-50%,0)}
 .empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.bars div{display:grid;grid-template-columns:minmax(0,11em) 1fr 4.2em;gap:10px;align-items:center;font-size:.8125rem;margin:7px 0}
+.bars s{display:block;height:9px;border-radius:var(--r-full);background:var(--line);overflow:hidden;text-decoration:none}
+.bars s i{display:block;height:100%;background:var(--ok);transition:width .6s cubic-bezier(.8,0,.2,1)}
+.bars b{font:500 .75rem/1 "JetBrains Mono",monospace;color:var(--muted);text-align:right}
+.bars .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:480px){.bars div{grid-template-columns:minmax(0,8em) 1fr 3.6em}}
 .flash{animation:fl .6s}@keyframes fl{0%{background:color-mix(in oklch,var(--warn),transparent 55%)}to{background:transparent}}
 </style>
 </head>
@@ -118,6 +124,8 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
     <div class="seg" id="seg" role="img"></div>
     <div class="lg" id="lg"></div>
     <div class="kpis" id="kpis"></div>
+    <h2 style="margin-top:24px">Por asignatura <span class="small">(manuales AFIR)</span></h2>
+    <div class="bars" id="bars"></div>
   </section>
 </main>
 <div class="veil" id="veil"></div>
@@ -127,6 +135,9 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
     <div class="pill" id="mode"><i></i><button data-v="mix" aria-pressed="true">Mezcla</button><button data-v="rev" aria-pressed="false">Solo repaso</button><button data-v="new" aria-pressed="false">Solo nuevas</button></div>
     <p class="small" style="margin-top:8px" id="modeTxt"></p></div>
   <div><h2>Convocatorias</h2><div class="years" id="years"></div></div>
+  <div><h2>Asignaturas <span class="small" id="mSel"></span></h2>
+    <div class="years" id="mans"></div>
+    <div class="row" style="margin-top:8px"><button id="mAll">Todas</button><button id="mNone">Ninguna</button></div></div>
   <div><h2>Tema</h2>
     <div class="pill" id="theme"><i></i><button data-v="auto" aria-pressed="true">Sistema</button><button data-v="light" aria-pressed="false">Claro</button><button data-v="dark" aria-pressed="false">Oscuro</button></div></div>
   <div><h2>Copia de seguridad</h2>
@@ -144,7 +155,7 @@ const APP_VER='0_02',KEY='firtest:v1';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---------- estado ---------- */
-const blank=()=>({v:1,turn:0,cards:{},years:null,mode:'mix',theme:'auto',streak:0,best:0,ok:0,bad:0,lastExport:null});
+const blank=()=>({v:1,turn:0,cards:{},years:null,mans:null,mode:'mix',theme:'auto',streak:0,best:0,ok:0,bad:0,lastExport:null});
 let S=blank();
 try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(blank(),JSON.parse(raw))}catch(e){}
 let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},120)};
@@ -161,8 +172,8 @@ function grade(id,right){
 }
 const stateOf=q=>{const c=S.cards[q.id];if(!c||!c.s)return 'new';if(c.r>=3)return 'dom';if(c.r===0)return 'bad';return 'rev'};
 /* ---------- datos ---------- */
-let BANK=[],YEARS=[],cur=null,answered=false,lastId=null;
-const active=()=>BANK.filter(q=>q.c&&(!S.years||S.years.includes(q.y)));
+let BANK=[],YEARS=[],MANS=[],cur=null,answered=false,lastId=null;
+const active=()=>BANK.filter(q=>q.c&&(!S.years||S.years.includes(q.y))&&(!S.mans||S.mans.includes(q.m)));
 function pick(){
   const pool=active();if(!pool.length)return null;
   const seen=pool.filter(q=>S.cards[q.id]&&S.cards[q.id].s&&q.id!==lastId);
@@ -181,7 +192,7 @@ function render(){
   if(!cur){el.innerHTML='<div class="empty">No hay preguntas con este filtro.<br>Cambia el modo o las convocatorias en ⚙︎.</div>';return}
   const st=stateOf(cur),c=S.cards[cur.id];
   const tag=st==='new'?'<span class="tag new">nueva</span>':'<span class="tag rep">repaso · fallada '+c.lp+'×</span>';
-  el.innerHTML='<div class="meta"><span class="mono">FIR '+cur.y+' · '+cur.n+'</span>'+tag+(cur.res?'<span class="tag">reserva</span>':'')+'</div>'+
+  el.innerHTML='<div class="meta"><span class="mono">FIR '+cur.y+' · '+cur.n+'</span>'+(cur.m?'<span class="tag">'+esc(cur.m)+'</span>':'')+tag+(cur.res?'<span class="tag">reserva</span>':'')+'</div>'+
    '<p class="q">'+esc(cur.q)+'</p>'+
    (cur.img?'<figure class="fig"><img src="'+esc(cur.img)+'" alt="Figura de la pregunta '+cur.n+'" loading="eager"></figure>':'')+
    '<div class="ops">'+cur.o.map((o,i)=>'<button class="op" data-i="'+(i+1)+'"><b>'+(i+1)+'</b><span>'+esc(o)+'</span></button>').join('')+'</div>'+
@@ -223,6 +234,11 @@ function progress(){
   const seen=S.ok+S.bad;
   $('kpis').innerHTML=[['Vistas',(tot-cnt.new)+' / '+pool.length],['Acierto',seen?Math.round(S.ok/seen*100)+'%':'—'],['Repasos ya',due],['Dominadas',cnt.dom]]
     .map(([l,v])=>'<div class="kpi"><b>'+v+'</b><span>'+l+'</span></div>').join('');
+  const by={};
+  for(const q of BANK){if(!q.c||!q.m)continue;const c=S.cards[q.id];const b=by[q.m]||(by[q.m]={n:0,s:0,ok:0});b.n++;if(c&&c.s){b.s+=c.s;b.ok+=c.ok}}
+  const rows=Object.entries(by).sort((a,b)=>b[1].n-a[1].n);
+  $('bars').innerHTML=rows.map(([m,b])=>{const p=b.s?Math.round(b.ok/b.s*100):0;
+    return '<div><span class="nm" title="'+esc(m)+'">'+esc(m)+'</span><s><i style="width:'+(b.s?p:0)+'%;background:'+(!b.s?'var(--line)':p>=70?'var(--ok)':p>=50?'var(--warn)':'var(--bad)')+'"></i></s><b>'+(b.s?p+'%':'—')+'</b></div>'}).join('');
 }
 /* ---------- ajustes ---------- */
 function pill(el,val,on){el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===val)));
@@ -233,9 +249,17 @@ function settings(){
   pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});$('modeTxt').textContent=MODE[S.mode];
   pill($('theme'),S.theme,v=>{S.theme=v;theme();save()});
   $('years').innerHTML=YEARS.map(y=>'<label><input type="checkbox" value="'+y.y+'" '+(!S.years||S.years.includes(y.y)?'checked':'')+'> <span class="mono">'+y.y+'</span></label>').join('');
+  $('mans').innerHTML=MANS.map(m=>'<label><input type="checkbox" value="'+esc(m)+'" '+(!S.mans||S.mans.includes(m)?'checked':'')+'> '+esc(m)+'</label>').join('');
+  $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
   $('lastExp').textContent=S.lastExport?'Última copia: '+new Date(S.lastExport).toLocaleString('es-ES'):'Aún no has exportado ninguna copia.';
 }
 $('years').addEventListener('change',()=>{const v=[...$('years').querySelectorAll('input:checked')].map(x=>+x.value);S.years=v.length===YEARS.length?null:v;save();render();progress()});
+function setMans(v,redraw){S.mans=(v&&v.length===MANS.length)?null:v;save();
+  $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
+  if(redraw)$('mans').querySelectorAll('input').forEach(x=>x.checked=!S.mans||S.mans.includes(x.value));
+  render();progress()}
+$('mans').addEventListener('change',()=>setMans([...$('mans').querySelectorAll('input:checked')].map(x=>x.value)));
+$('mAll').onclick=()=>setMans(null,1);$('mNone').onclick=()=>setMans([],1);
 function theme(){S.theme==='auto'?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme',S.theme)}
 function openSet(o){$('panel').classList.toggle('on',o);$('veil').classList.toggle('on',o);$('panel').setAttribute('aria-hidden',String(!o));if(o){settings();requestAnimationFrame(()=>{pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});pill($('theme'),S.theme,v=>{S.theme=v;theme();save()})})}}
 $('openSet').onclick=()=>openSet(true);$('closeSet').onclick=()=>openSet(false);$('veil').onclick=()=>openSet(false);
@@ -260,6 +284,8 @@ theme();tally();
   YEARS=await fetch('data/index.json',{cache:'no-cache'}).then(r=>r.json());
   const sets=await Promise.all(YEARS.map(y=>fetch('data/'+y.y+'.json').then(r=>r.json())));
   BANK=sets.flat();if(S.years)S.years=S.years.filter(y=>YEARS.some(x=>x.y===y));if(S.years&&!S.years.length)S.years=null;
+  MANS=[...new Set(BANK.map(q=>q.m).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  if(S.mans){S.mans=S.mans.filter(m=>MANS.includes(m));if(!S.mans.length)S.mans=null}
   render();progress();
 }catch(e){$('card').innerHTML='<div class="empty">No se pudieron cargar las preguntas ('+esc(e.message)+').</div>'}})();
 }
