@@ -13,7 +13,7 @@ Cuadernos oficiales (versión 0) y plantillas definitivas del portal FSE del Min
 | Convocatoria | Preguntas | Anuladas | Explicaciones |
 |---|---|---|---|
 | 2025 | 210 | 83, 110, 116, 120 | ✔ |
-| 2024 | 210 | 53, 169, 172, 190 | pendiente |
+| 2024 | 210 | 53, 169, 172, 190 | 202 de 206 |
 | 2023 | 210 | 28, 47, 126, 132, 180, 190 | pendiente |
 | 2022 | 210 | — | pendiente |
 | 2021 | 210 | 100, 182, 194 | pendiente |
