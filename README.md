@@ -6,6 +6,11 @@ Tests infinitos con los exámenes oficiales del FIR (Farmacéutico Interno Resid
 - **Repetición espaciada**: las falladas vuelven a salir a las ~5 preguntas y, a medida que las aciertas, se espacian (25 → 80 → ×facilidad). Dominada = 3 aciertos seguidos.
 - Progreso en el navegador, con exportar/importar `.json` como copia de seguridad.
 - Teclado: `1`–`4` para responder, `Enter` para la siguiente.
+- **Simulacro**: examen real completo de un año, con su tiempo oficial, pausa y nota neta (3 / −1; las anuladas se sustituyen por reservas).
+- **Falladas**: lista de lo que más fallas, con respuesta y explicación.
+- **Objetivo diario** y racha de días.
+- **Sincronización** opcional entre dispositivos mediante un Gist secreto de GitHub (token con permiso `gist`; se guarda solo en el navegador).
+- Instalable como app (PWA) y utilizable sin conexión.
 
 ## Datos
 Cuadernos oficiales (versión 0) y plantillas definitivas del Ministerio de Sanidad. 2021-2025 desde el portal FSE; 2016-2020 desde las copias que publica La Chuleta del FIR (el portal solo conserva cinco convocatorias). La plantilla de 2019 procede de consalud.es y se contrastó con una copia independiente: coinciden las 180 respuestas.
