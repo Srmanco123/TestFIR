@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F4EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#181712" media="(prefers-color-scheme: dark)">
+<title>FIR Test</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323211C'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='%23A88A3D' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* FIR Test v0_02 · paleta Pirita · piezas 20, 22, 37, 65, 69, 79, 81 (muestrario 24 nov 2026)
+   Sistema base: escala fija, 2 elevaciones, 180/250 ms, hover solo con ratón, color solo en datos (69) */
+:root{--paper:#F6F4EE;--surface:#ECE8DE;--ink:#23211C;--muted:#6A645A;--line:#DAD4C6;--acc1:#A88A3D;--acc2:#7A7468;--ok:#4E8A57;--warn:#C98A1B;--bad:#A8423A;
+--r-8:8px;--r-16:16px;--r-full:9999px;
+--e1:0 4px 32px color-mix(in oklch,#000,transparent 90%);--e2:0 24px 70px color-mix(in oklch,#000,transparent 90%);
+--t-fast:180ms ease-out;--t:250ms cubic-bezier(.8,0,.2,1);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--paper:#181712;--surface:#24221C;--ink:#EEEAE0;--muted:#A7A194;--line:#38352C;--acc1:#C4A55A;--acc2:#A39C8E;--ok:#62A26C;--warn:#DBA03A;--bad:#CC5A50;color-scheme:dark}}
+:root[data-theme=dark]{--paper:#181712;--surface:#24221C;--ink:#EEEAE0;--muted:#A7A194;--line:#38352C;--acc1:#C4A55A;--acc2:#A39C8E;--ok:#62A26C;--warn:#DBA03A;--bad:#CC5A50;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1rem/1.45 Inter,system-ui,sans-serif;overflow-x:clip;padding-bottom:env(safe-area-inset-bottom)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+button,select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-8);min-height:44px;padding:8px 14px;cursor:pointer;font-weight:500}
+button:focus-visible,select:focus-visible,.op:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){button:hover{background:var(--surface)}}
+.pri{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+@media (hover:hover) and (pointer:fine){.pri:hover{background:var(--ink);opacity:.88}}
+/* 20 · barra de cristal compacta */
+.bar{position:sticky;top:0;z-index:10;padding:calc(8px + env(safe-area-inset-top)) max(4vw,12px) 8px}
+.glass{max-width:46rem;margin:auto;display:flex;align-items:center;gap:12px;padding:0 8px 0 16px;height:52px;border-radius:var(--r-full);background:color-mix(in oklch,var(--paper),transparent 22%);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--e1);transition:height var(--t),max-width var(--t)}
+.sm .glass{height:42px;max-width:36rem}
+.brand{font-weight:700;letter-spacing:-.04rem}
+.tally{margin-left:auto;font-size:.875rem;display:flex;gap:12px;white-space:nowrap}
+.tally .ok{color:var(--ok)}.tally .bad{color:var(--bad)}
+.ib{min-height:36px;min-width:36px;padding:0 10px;border-radius:var(--r-full);border:0;background:transparent}
+main{max-width:46rem;margin:auto;padding:8px max(4vw,12px) 48px}
+/* 81 · racha */
+.streak{display:flex;align-items:center;gap:8px;margin:8px 4px 16px;font-size:.75rem;color:var(--muted)}
+.streak .cells{display:flex;gap:3px}.streak i{width:10px;height:20px;border-radius:3px;background:var(--line);transition:background var(--t-fast)}
+.streak i.on{background:var(--ok)}
+/* 79 · tarjeta de pregunta */
+.card{background:color-mix(in oklch,var(--paper),#fff 35%);border:1px solid var(--line);border-radius:var(--r-16);box-shadow:var(--e1);padding:clamp(16px,4vw,28px)}
+:root[data-theme=dark] .card{background:var(--surface)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .card{background:var(--surface)}}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.75rem;color:var(--muted);margin-bottom:12px}
+.tag{padding:2px 8px;border-radius:var(--r-full);border:1px solid var(--line)}
+.tag.rep{color:var(--warn);border-color:color-mix(in oklch,var(--warn),transparent 50%)}
+.tag.new{color:var(--muted)}
+.q{font-size:clamp(1.0625rem,2.6vw,1.25rem);line-height:1.35;font-weight:600;letter-spacing:-.01rem;margin:0 0 16px;text-wrap:pretty}
+.fig{margin:0 0 16px;background:#fff;border-radius:var(--r-8);padding:12px;text-align:center;border:1px solid var(--line)}
+.fig img{max-width:100%;height:auto;max-height:260px}
+.ops{display:grid;gap:8px}
+.op{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;min-height:52px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-8);background:var(--paper);font-weight:400;line-height:1.35;transition:border-color var(--t-fast),background var(--t-fast)}
+@media (hover:hover) and (pointer:fine){.op:not([disabled]):hover{border-color:var(--ink);background:var(--paper)}}
+.op b{font:600 .8125rem "JetBrains Mono",monospace;flex:none;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:var(--surface)}
+.op[disabled]{cursor:default;color:var(--ink)}
+.op.ok{border-color:var(--ok);background:color-mix(in oklch,var(--ok),transparent 88%)}.op.ok b{background:var(--ok);color:#fff}
+.op.bad{border-color:var(--bad);background:color-mix(in oklch,var(--bad),transparent 90%)}.op.bad span{text-decoration:line-through;color:var(--muted)}.op.bad b{background:var(--bad);color:#fff}
+.op.dim{opacity:.55}
+/* 65 · corrección en dos tonos */
+.fix{margin-top:16px;padding:14px 16px;border-radius:var(--r-8);border-left:3px solid var(--ok);background:var(--surface);animation:in var(--t) both}
+.fix.no{border-left-color:var(--bad)}
+.fix p{margin:0;line-height:1.45}.fix p b{font-weight:600}.fix p span{color:var(--muted)}
+.verdict{font-weight:700;margin-bottom:4px}.verdict.ok{color:var(--ok)}.verdict.bad{color:var(--bad)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.next{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:16px}
+.hint{font-size:.75rem;color:var(--muted)}
+kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px}
+@media (hover:none){.kb{display:none}}
+/* 37 · progreso */
+.prog{margin-top:24px}
+.prog h2,.panel h2{font-size:1rem;margin:0 0 8px;letter-spacing:-.02rem}
+.seg{display:flex;height:14px;border-radius:var(--r-full);overflow:hidden;gap:2px;background:var(--line)}
+.seg span{transition:width .6s cubic-bezier(.8,0,.2,1)}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.75rem;color:var(--muted);margin-top:8px}
+.lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px}
+.kpi{border:1px solid var(--line);border-radius:var(--r-8);padding:10px 12px}
+.kpi b{display:block;font:600 1.375rem/1.1 "JetBrains Mono",monospace;letter-spacing:-.04rem}
+.kpi span{font-size:.6875rem;color:var(--muted)}
+@media (max-width:480px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* panel ajustes + 22 cápsula */
+.veil{position:fixed;inset:0;z-index:30;background:color-mix(in oklch,#000,transparent 60%);opacity:0;pointer-events:none;transition:opacity var(--t)}
+.veil.on{opacity:1;pointer-events:auto}
+.panel{position:fixed;z-index:31;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--paper);border-radius:var(--r-16) var(--r-16) 0 0;box-shadow:var(--e2);padding:20px max(4vw,16px) calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform var(--t)}
+.panel.on{transform:none}
+.panel .in{max-width:46rem;margin:auto;display:grid;gap:20px}
+.pill{display:inline-flex;position:relative;background:var(--surface);border-radius:var(--r-full);padding:4px;max-width:100%}
+.pill button{border:0;background:none;min-height:38px;position:relative;z-index:1;font-size:.875rem;padding:6px 14px;border-radius:var(--r-full);white-space:nowrap}
+.pill i{position:absolute;top:4px;bottom:4px;border-radius:var(--r-full);background:var(--ink);transition:left .35s cubic-bezier(.3,1.5,.6,1),width .35s cubic-bezier(.3,1.5,.6,1)}
+.pill button[aria-pressed=true]{color:var(--paper)}
+@media (hover:hover) and (pointer:fine){.pill button:hover{background:none}}
+.years{display:flex;flex-wrap:wrap;gap:6px}
+.years label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:var(--r-full);padding:6px 12px;font-size:.875rem;cursor:pointer;min-height:40px}
+.years input{accent-color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.small{font-size:.8125rem;color:var(--muted);margin:0}
+.toast{position:fixed;z-index:40;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r-8);font-size:.875rem;transition:transform var(--t);white-space:nowrap}
+.toast.on{transform:translate(-50%,0)}
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.flash{animation:fl .6s}@keyframes fl{0%{background:color-mix(in oklch,var(--warn),transparent 55%)}to{background:transparent}}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"><div class="glass">
+  <span class="brand">FIR Test</span>
+  <span class="tally mono" aria-live="polite"><span class="ok" id="tOk">✓ 0</span><span class="bad" id="tBad">✕ 0</span><span id="tNet" title="Neta FIR: 3 por acierto − 1 por fallo">neta 0</span></span>
+  <button class="ib" id="openSet" aria-label="Ajustes y progreso">⚙︎</button>
+</div></div>
+<main>
+  <div class="streak"><span>Racha</span><span class="cells" id="cells"></span><span class="mono" id="stN">0</span><span style="margin-left:auto" class="mono" id="best">mejor 0</span></div>
+  <section class="card" id="card" aria-live="polite"><div class="empty">Cargando preguntas…</div></section>
+  <section class="prog">
+    <h2>Tu banco</h2>
+    <div class="seg" id="seg" role="img"></div>
+    <div class="lg" id="lg"></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+</main>
+<div class="veil" id="veil"></div>
+<aside class="panel" id="panel" aria-label="Ajustes" aria-hidden="true"><div class="in">
+  <div class="row" style="justify-content:space-between"><h2 style="font-size:1.375rem;margin:0">Ajustes</h2><button id="closeSet">Cerrar</button></div>
+  <div><h2>Qué preguntas salen</h2>
+    <div class="pill" id="mode"><i></i><button data-v="mix" aria-pressed="true">Mezcla</button><button data-v="rev" aria-pressed="false">Solo repaso</button><button data-v="new" aria-pressed="false">Solo nuevas</button></div>
+    <p class="small" style="margin-top:8px" id="modeTxt"></p></div>
+  <div><h2>Convocatorias</h2><div class="years" id="years"></div></div>
+  <div><h2>Tema</h2>
+    <div class="pill" id="theme"><i></i><button data-v="auto" aria-pressed="true">Sistema</button><button data-v="light" aria-pressed="false">Claro</button><button data-v="dark" aria-pressed="false">Oscuro</button></div></div>
+  <div><h2>Copia de seguridad</h2>
+    <p class="small">El progreso se guarda en este navegador. Expórtalo para no perderlo o llevarlo a otro dispositivo.</p>
+    <div class="row" style="margin-top:8px"><button class="pri" id="exp">Exportar progreso .json</button>
+      <label class="row" style="cursor:pointer"><button type="button" id="impB">Importar .json</button><input type="file" id="imp" accept=".json,application/json" hidden></label>
+      <button id="reset">Borrar progreso</button></div>
+    <p class="small" id="lastExp" style="margin-top:8px"></p></div>
+  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_02</span></p>
+</div></aside>
+<div class="toast" id="toast" role="status"></div>
+<script>
+{
+const APP_VER='0_02',KEY='firtest:v1';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- estado ---------- */
+const blank=()=>({v:1,turn:0,cards:{},years:null,mode:'mix',theme:'auto',streak:0,best:0,ok:0,bad:0,lastExport:null});
+let S=blank();
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(blank(),JSON.parse(raw))}catch(e){}
+let saveT;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},120)};
+/* ---------- repetición espaciada (en turnos = preguntas respondidas) ----------
+   fallo  → vuelve a los ~5 turnos, reinicia repeticiones, baja la facilidad
+   acierto→ 1ª: 25 turnos · 2ª: 80 · luego intervalo × facilidad
+   dominada = 3 aciertos seguidos */
+const card=id=>S.cards[id]||(S.cards[id]={r:0,ef:2.5,iv:0,due:0,s:0,ok:0,lp:0});
+function grade(id,right){
+  const c=card(id);c.s++;
+  if(right){c.ok++;c.r++;c.iv=c.r===1?25:c.r===2?80:Math.round(c.iv*c.ef);c.ef=Math.min(2.8,c.ef+.05)}
+  else{c.lp++;c.r=0;c.iv=5;c.ef=Math.max(1.3,c.ef-.2)}
+  c.due=S.turn+c.iv;
+}
+const stateOf=q=>{const c=S.cards[q.id];if(!c||!c.s)return 'new';if(c.r>=3)return 'dom';if(c.r===0)return 'bad';return 'rev'};
+/* ---------- datos ---------- */
+let BANK=[],YEARS=[],cur=null,answered=false,lastId=null;
+const active=()=>BANK.filter(q=>q.c&&(!S.years||S.years.includes(q.y)));
+function pick(){
+  const pool=active();if(!pool.length)return null;
+  const seen=pool.filter(q=>S.cards[q.id]&&S.cards[q.id].s&&q.id!==lastId);
+  const fresh=pool.filter(q=>!(S.cards[q.id]&&S.cards[q.id].s));
+  const due=seen.filter(q=>S.cards[q.id].due<=S.turn).sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due);
+  const rnd=a=>a[Math.floor(Math.random()*a.length)];
+  if(S.mode==='new')return fresh.length?rnd(fresh):(due[0]||rnd(seen)||null);
+  if(S.mode==='rev'){if(due.length)return due[0];const s=[...seen].sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due);return s[0]||rnd(fresh)||null}
+  if(due.length)return due[0];
+  if(fresh.length)return rnd(fresh);
+  return [...seen].sort((a,b)=>S.cards[a.id].due-S.cards[b.id].due)[0]||null;
+}
+/* ---------- pintar pregunta ---------- */
+function render(){
+  cur=pick();answered=false;const el=$('card');
+  if(!cur){el.innerHTML='<div class="empty">No hay preguntas con este filtro.<br>Cambia el modo o las convocatorias en ⚙︎.</div>';return}
+  const st=stateOf(cur),c=S.cards[cur.id];
+  const tag=st==='new'?'<span class="tag new">nueva</span>':'<span class="tag rep">repaso · fallada '+c.lp+'×</span>';
+  el.innerHTML='<div class="meta"><span class="mono">FIR '+cur.y+' · '+cur.n+'</span>'+tag+(cur.res?'<span class="tag">reserva</span>':'')+'</div>'+
+   '<p class="q">'+esc(cur.q)+'</p>'+
+   (cur.img?'<figure class="fig"><img src="'+esc(cur.img)+'" alt="Figura de la pregunta '+cur.n+'" loading="eager"></figure>':'')+
+   '<div class="ops">'+cur.o.map((o,i)=>'<button class="op" data-i="'+(i+1)+'"><b>'+(i+1)+'</b><span>'+esc(o)+'</span></button>').join('')+'</div>'+
+   '<div id="fixBox"></div>'+
+   '<div class="next"><span class="hint kb">Responde con <kbd>1</kbd>–<kbd>4</kbd></span><span></span></div>';
+  el.style.animation='none';void el.offsetWidth;el.style.animation='in .25s both';
+}
+function answer(i){
+  if(answered||!cur)return;answered=true;
+  const right=i===cur.c;S.turn++;grade(cur.id,right);lastId=cur.id;
+  if(right){S.ok++;S.streak++;S.best=Math.max(S.best,S.streak)}else{S.bad++;S.streak=0}
+  document.querySelectorAll('.op').forEach(b=>{const k=+b.dataset.i;b.disabled=true;
+    if(k===cur.c)b.classList.add('ok');else if(k===i)b.classList.add('bad');else b.classList.add('dim')});
+  const ex=(cur.e||'').trim(),dot=ex.search(/[.:;](\s|$)/),k=dot>0?ex.slice(0,dot+1):ex,rest=dot>0?ex.slice(dot+1):'';
+  $('fixBox').innerHTML='<div class="fix'+(right?'':' no')+'"><div class="verdict '+(right?'ok':'bad')+'">'+(right?'Correcta':'Incorrecta · la buena es la '+cur.c)+'</div>'+
+    (ex?'<p><b>'+esc(k)+'</b><span>'+esc(rest)+'</span></p>':'<p><span>Respuesta oficial: '+esc(cur.o[cur.c-1])+'</span></p>')+'</div>';
+  document.querySelector('.next').innerHTML='<span class="hint kb"><kbd>Enter</kbd> siguiente</span><button class="pri" id="nx">Siguiente →</button>';
+  $('nx').onclick=next;$('nx').focus({preventScroll:true});
+  const nb=$('nx').getBoundingClientRect();if(nb.bottom>innerHeight)$('nx').scrollIntoView({block:'end',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
+  tally(true);progress();save();
+}
+const next=()=>{render();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})};
+/* ---------- marcador, racha, progreso ---------- */
+function flash(el,txt){if(el.textContent===txt)return;el.textContent=txt;el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+function tally(fx){
+  const f=fx?flash:(el,t)=>el.textContent=t;
+  f($('tOk'),'✓ '+S.ok);f($('tBad'),'✕ '+S.bad);f($('tNet'),'neta '+(3*S.ok-S.bad));
+  const n=10,on=S.streak%n===0&&S.streak?n:S.streak%n;
+  $('cells').innerHTML=Array.from({length:n},(_,i)=>'<i class="'+(i<on?'on':'')+'"></i>').join('');
+  $('stN').textContent=S.streak;$('best').textContent='mejor '+S.best;
+}
+function progress(){
+  const pool=active(),cnt={new:0,bad:0,rev:0,dom:0};pool.forEach(q=>cnt[stateOf(q)]++);
+  const tot=pool.length||1,due=pool.filter(q=>{const c=S.cards[q.id];return c&&c.s&&c.due<=S.turn}).length;
+  const parts=[['bad','var(--bad)','Falladas'],['rev','var(--warn)','En repaso'],['dom','var(--ok)','Dominadas'],['new','transparent','Sin ver']];
+  $('seg').innerHTML=parts.map(([k,c])=>'<span style="width:'+(cnt[k]/tot*100)+'%;background:'+c+'"></span>').join('');
+  $('seg').setAttribute('aria-label',parts.map(([k,,l])=>l+' '+cnt[k]).join(', '));
+  $('lg').innerHTML=parts.map(([k,c,l])=>'<span><i style="background:'+(k==='new'?'var(--line)':c)+'"></i>'+l+' <span class="mono">'+cnt[k]+'</span></span>').join('');
+  const seen=S.ok+S.bad;
+  $('kpis').innerHTML=[['Vistas',(tot-cnt.new)+' / '+pool.length],['Acierto',seen?Math.round(S.ok/seen*100)+'%':'—'],['Repasos ya',due],['Dominadas',cnt.dom]]
+    .map(([l,v])=>'<div class="kpi"><b>'+v+'</b><span>'+l+'</span></div>').join('');
+}
+/* ---------- ajustes ---------- */
+function pill(el,val,on){el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===val)));
+  const b=el.querySelector('[aria-pressed=true]'),i=el.querySelector('i');if(b&&b.offsetWidth){i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px'}
+  el.onclick=e=>{const t=e.target.closest('button');if(t){on(t.dataset.v);pill(el,t.dataset.v,on)}}}
+const MODE={mix:'Primero lo que toca repasar; si no hay, una nueva al azar.',rev:'Solo preguntas ya vistas, empezando por las que más urge repasar.',new:'Solo preguntas que aún no has visto.'};
+function settings(){
+  pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});$('modeTxt').textContent=MODE[S.mode];
+  pill($('theme'),S.theme,v=>{S.theme=v;theme();save()});
+  $('years').innerHTML=YEARS.map(y=>'<label><input type="checkbox" value="'+y.y+'" '+(!S.years||S.years.includes(y.y)?'checked':'')+'> <span class="mono">'+y.y+'</span></label>').join('');
+  $('lastExp').textContent=S.lastExport?'Última copia: '+new Date(S.lastExport).toLocaleString('es-ES'):'Aún no has exportado ninguna copia.';
+}
+$('years').addEventListener('change',()=>{const v=[...$('years').querySelectorAll('input:checked')].map(x=>+x.value);S.years=v.length===YEARS.length?null:v;save();render();progress()});
+function theme(){S.theme==='auto'?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme',S.theme)}
+function openSet(o){$('panel').classList.toggle('on',o);$('veil').classList.toggle('on',o);$('panel').setAttribute('aria-hidden',String(!o));if(o){settings();requestAnimationFrame(()=>{pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});pill($('theme'),S.theme,v=>{S.theme=v;theme();save()})})}}
+$('openSet').onclick=()=>openSet(true);$('closeSet').onclick=()=>openSet(false);$('veil').onclick=()=>openSet(false);
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2200)}
+$('exp').onclick=()=>{S.lastExport=Date.now();save();const blob=new Blob([JSON.stringify({app:'FIR Test',ver:APP_VER,date:new Date().toISOString(),state:S})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fir-test-progreso-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();settings();toast('✓ Copia exportada')};
+$('impB').onclick=()=>$('imp').click();
+$('imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j.state||!j.state.cards)throw Error('formato no válido');S=Object.assign(blank(),j.state);save();theme();settings();tally();progress();render();toast('✓ Progreso importado')}catch(err){toast('✕ No se pudo importar: '+err.message)}e.target.value=''};
+let armed=false;$('reset').onclick=()=>{if(!armed){armed=true;$('reset').textContent='Pulsa otra vez para borrar';setTimeout(()=>{armed=false;$('reset').textContent='Borrar progreso'},3000);return}
+  const keep={years:S.years,mode:S.mode,theme:S.theme};S=Object.assign(blank(),keep);save();armed=false;$('reset').textContent='Borrar progreso';tally();progress();render();settings();toast('Progreso borrado')};
+/* ---------- eventos ---------- */
+$('card').addEventListener('click',e=>{const b=e.target.closest('.op');if(b&&!b.disabled)answer(+b.dataset.i)});
+document.addEventListener('keydown',e=>{if($('panel').classList.contains('on')){if(e.key==='Escape')openSet(false);return}
+  if(e.target.matches('input,textarea,select'))return;
+  if('1234'.includes(e.key)&&!answered){e.preventDefault();answer(+e.key)}
+  else if((e.key==='Enter'||e.key===' ')&&answered&&document.activeElement?.id!=='nx'){e.preventDefault();next()}});
+const io=new IntersectionObserver(([en])=>$('bar').classList.toggle('sm',!en.isIntersecting),{rootMargin:'-60px 0px 0px 0px'});
+const sentinel=document.createElement('div');sentinel.style.cssText='position:absolute;top:0;height:1px;width:1px';document.body.prepend(sentinel);io.observe(sentinel);
+/* ---------- arranque ---------- */
+theme();tally();
+(async()=>{try{
+  YEARS=await fetch('data/index.json',{cache:'no-cache'}).then(r=>r.json());
+  const sets=await Promise.all(YEARS.map(y=>fetch('data/'+y.y+'.json').then(r=>r.json())));
+  BANK=sets.flat();if(S.years)S.years=S.years.filter(y=>YEARS.some(x=>x.y===y));if(S.years&&!S.years.length)S.years=null;
+  render();progress();
+}catch(e){$('card').innerHTML='<div class="empty">No se pudieron cargar las preguntas ('+esc(e.message)+').</div>'}})();
+}
+</script>
+</body>
+</html>
