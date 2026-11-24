@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#F6F4EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#181712" media="(prefers-color-scheme: dark)">
 <title>FIR Test</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323211C'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='%23A88A3D' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -147,12 +150,12 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
       <label class="row" style="cursor:pointer"><button type="button" id="impB">Importar .json</button><input type="file" id="imp" accept=".json,application/json" hidden></label>
       <button id="reset">Borrar progreso</button></div>
     <p class="small" id="lastExp" style="margin-top:8px"></p></div>
-  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_03</span></p>
+  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_04</span></p>
 </div></aside>
 <div class="toast" id="toast" role="status"></div>
 <script>
 {
-const APP_VER='0_03',KEY='firtest:v1';
+const APP_VER='0_04',KEY='firtest:v1';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---------- estado ---------- */
@@ -280,6 +283,7 @@ document.addEventListener('keydown',e=>{if($('panel').classList.contains('on')){
   else if((e.key==='Enter'||e.key===' ')&&answered&&document.activeElement?.id!=='nx'){e.preventDefault();next()}});
 const io=new IntersectionObserver(([en])=>$('bar').classList.toggle('sm',!en.isIntersecting),{rootMargin:'-60px 0px 0px 0px'});
 const sentinel=document.createElement('div');sentinel.style.cssText='position:absolute;top:0;height:1px;width:1px';document.body.prepend(sentinel);io.observe(sentinel);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* ---------- arranque ---------- */
 theme();tally();
 (async()=>{try{
