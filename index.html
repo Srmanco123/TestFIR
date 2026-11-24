@@ -101,12 +101,12 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
 .toast{position:fixed;z-index:40;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r-8);font-size:.875rem;transition:transform var(--t);white-space:nowrap}
 .toast.on{transform:translate(-50%,0)}
 .empty{text-align:center;padding:48px 16px;color:var(--muted)}
-.bars div{display:grid;grid-template-columns:minmax(0,11em) 1fr 4.2em;gap:10px;align-items:center;font-size:.8125rem;margin:7px 0}
-.bars s{display:block;height:9px;border-radius:var(--r-full);background:var(--line);overflow:hidden;text-decoration:none}
-.bars s i{display:block;height:100%;background:var(--ok);transition:width .6s cubic-bezier(.8,0,.2,1)}
+.bars div{display:grid;grid-template-columns:minmax(0,11em) 1fr 5.4em;gap:10px;align-items:center;font-size:.8125rem;margin:7px 0}
+.bars s{display:flex;height:9px;border-radius:var(--r-full);background:var(--line);overflow:hidden;text-decoration:none}
+.bars s i{display:block;height:100%;flex:none;transition:width .6s cubic-bezier(.8,0,.2,1)}
 .bars b{font:500 .75rem/1 "JetBrains Mono",monospace;color:var(--muted);text-align:right}
 .bars .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:480px){.bars div{grid-template-columns:minmax(0,8em) 1fr 3.6em}}
+@media(max-width:480px){.bars div{grid-template-columns:minmax(0,7.5em) 1fr 5em}}
 .flash{animation:fl .6s}@keyframes fl{0%{background:color-mix(in oklch,var(--warn),transparent 55%)}to{background:transparent}}
 </style>
 </head>
@@ -114,6 +114,7 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
 <div class="bar" id="bar"><div class="glass">
   <span class="brand">FIR Test</span>
   <span class="tally mono" aria-live="polite"><span class="ok" id="tOk">✓ 0</span><span class="bad" id="tBad">✕ 0</span><span id="tNet" title="Neta FIR: 3 por acierto − 1 por fallo">neta 0</span></span>
+  <button class="ib" id="thBtn" aria-label="Cambiar tema claro u oscuro" title="Tema claro / oscuro">◐</button>
   <button class="ib" id="openSet" aria-label="Ajustes y progreso">⚙︎</button>
 </div></div>
 <main>
@@ -146,12 +147,12 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
       <label class="row" style="cursor:pointer"><button type="button" id="impB">Importar .json</button><input type="file" id="imp" accept=".json,application/json" hidden></label>
       <button id="reset">Borrar progreso</button></div>
     <p class="small" id="lastExp" style="margin-top:8px"></p></div>
-  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_02</span></p>
+  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_03</span></p>
 </div></aside>
 <div class="toast" id="toast" role="status"></div>
 <script>
 {
-const APP_VER='0_02',KEY='firtest:v1';
+const APP_VER='0_03',KEY='firtest:v1';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---------- estado ---------- */
@@ -237,8 +238,8 @@ function progress(){
   const by={};
   for(const q of BANK){if(!q.c||!q.m)continue;const c=S.cards[q.id];const b=by[q.m]||(by[q.m]={n:0,s:0,ok:0});b.n++;if(c&&c.s){b.s+=c.s;b.ok+=c.ok}}
   const rows=Object.entries(by).sort((a,b)=>b[1].n-a[1].n);
-  $('bars').innerHTML=rows.map(([m,b])=>{const p=b.s?Math.round(b.ok/b.s*100):0;
-    return '<div><span class="nm" title="'+esc(m)+'">'+esc(m)+'</span><s><i style="width:'+(b.s?p:0)+'%;background:'+(!b.s?'var(--line)':p>=70?'var(--ok)':p>=50?'var(--warn)':'var(--bad)')+'"></i></s><b>'+(b.s?p+'%':'—')+'</b></div>'}).join('');
+  $('bars').innerHTML=rows.map(([m,b])=>{const bad=b.s-b.ok,po=b.s?b.ok/b.s*100:0;
+    return '<div><span class="nm" title="'+esc(m)+'">'+esc(m)+'</span><s>'+(b.s?'<i style="width:'+po+'%;background:var(--ok)"></i><i style="width:'+(100-po)+'%;background:var(--bad)"></i>':'')+'</s><b>'+(b.s?'<span style="color:var(--ok)">'+b.ok+'✓</span> <span style="color:var(--bad)">'+bad+'✕</span>':'—')+'</b></div>'}).join('');
 }
 /* ---------- ajustes ---------- */
 function pill(el,val,on){el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===val)));
@@ -260,7 +261,8 @@ function setMans(v,redraw){S.mans=(v&&v.length===MANS.length)?null:v;save();
   render();progress()}
 $('mans').addEventListener('change',()=>setMans([...$('mans').querySelectorAll('input:checked')].map(x=>x.value)));
 $('mAll').onclick=()=>setMans(null,1);$('mNone').onclick=()=>setMans([],1);
-function theme(){S.theme==='auto'?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme',S.theme)}
+$('thBtn').onclick=()=>{const dark=S.theme==='dark'||(S.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);S.theme=dark?'light':'dark';theme();save();toast(S.theme==='dark'?'Tema oscuro':'Tema claro')};
+function theme(){const d=S.theme==='dark'||(S.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);$('thBtn').textContent=d?'☀':'☾';S.theme==='auto'?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme',S.theme)}
 function openSet(o){$('panel').classList.toggle('on',o);$('veil').classList.toggle('on',o);$('panel').setAttribute('aria-hidden',String(!o));if(o){settings();requestAnimationFrame(()=>{pill($('mode'),S.mode,v=>{S.mode=v;$('modeTxt').textContent=MODE[v];save();render();progress()});pill($('theme'),S.theme,v=>{S.theme=v;theme();save()})})}}
 $('openSet').onclick=()=>openSet(true);$('closeSet').onclick=()=>openSet(false);$('veil').onclick=()=>openSet(false);
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2200)}
