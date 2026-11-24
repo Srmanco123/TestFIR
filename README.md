@@ -14,7 +14,7 @@ Cuadernos oficiales (versión 0) y plantillas definitivas del Ministerio de Sani
 |---|---|---|---|
 | 2025 | 210 | 83, 110, 116, 120 | ✔ |
 | 2024 | 210 | 53, 169, 172, 190 | 202 de 206 |
-| 2023 | 210 | 28, 47, 126, 132, 180, 190 | pendiente |
+| 2023 | 210 | 28, 47, 126, 132, 180, 190 | 125 de 204 |
 | 2022 | 210 | — | pendiente |
 | 2021 | 210 | 100, 182, 194 | pendiente |
 | 2020 | 185 | 89, 97, 102 | pendiente |
