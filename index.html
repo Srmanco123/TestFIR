@@ -103,6 +103,7 @@ kbd{font:600 .6875rem "JetBrains Mono",monospace;border:1px solid var(--line);bo
 .small{font-size:.8125rem;color:var(--muted);margin:0}
 .toast{position:fixed;z-index:40;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translate(-50%,160%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r-8);font-size:.875rem;transition:transform var(--t);white-space:nowrap}
 .toast.on{transform:translate(-50%,0)}
+.book{display:flex;align-items:center;gap:8px;margin:0 4px 12px;font-size:.8125rem;color:var(--muted)}.book select{flex:1;font:inherit;font-size:16px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
 .tabs{display:flex;justify-content:center;margin:4px 0 12px}
 .goal{display:flex;align-items:center;gap:8px;margin:0 4px 14px;font-size:.75rem;color:var(--muted);flex-wrap:wrap}
 .goal s{flex:1;min-width:60px;height:8px;border-radius:9999px;background:var(--line);overflow:hidden;text-decoration:none}
@@ -142,6 +143,7 @@ select{min-height:44px}
 <main>
   <div class="tabs"><div class="pill" id="view"><i></i><button data-v="prac" aria-pressed="true">Practicar</button><button data-v="sim" aria-pressed="false">Simulacro</button><button data-v="fail" aria-pressed="false">Falladas</button></div></div>
   <div id="vPrac">
+  <div class="book"><label for="bookSel">Libro</label><select id="bookSel" aria-label="Libro del que salen las preguntas"></select></div>
   <div class="streak"><span>Racha</span><span class="cells" id="cells"></span><span class="mono" id="stN">0</span><span style="margin-left:auto" class="mono" id="best">mejor 0</span></div>
   <div class="goal"><span>Hoy</span><s><i id="gBar"></i></s><b class="mono" id="gTxt">0 / 25</b><span class="gcal" id="gCal"></span><span class="mono" id="gStreak"></span></div>
   <section class="card" id="card" aria-live="polite"><div class="empty">Cargando preguntas…</div></section>
@@ -181,12 +183,12 @@ select{min-height:44px}
       <label class="row" style="cursor:pointer"><button type="button" id="impB">Importar .json</button><input type="file" id="imp" accept=".json,application/json" hidden></label>
       <button id="reset">Borrar progreso</button></div>
     <p class="small" id="lastExp" style="margin-top:8px"></p></div>
-  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_05</span></p>
+  <p class="small">Preguntas y plantillas: cuadernos oficiales del Ministerio de Sanidad (FSE, versión 0). Explicaciones breves redactadas para estudio; ante duda, manda el libro. <span class="mono">v0_06</span></p>
 </div></aside>
 <div class="toast" id="toast" role="status"></div>
 <script>
 {
-const APP_VER='0_05',KEY='firtest:v1';let VIEW='prac';
+const APP_VER='0_06',KEY='firtest:v1';let VIEW='prac';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---------- estado ---------- */
@@ -288,8 +290,12 @@ function settings(){
   $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
   $('goalSel').value=String(S.goal||25);$('lastExp').textContent=S.lastExport?'Última copia: '+new Date(S.lastExport).toLocaleString('es-ES'):'Aún no has exportado ninguna copia.';
 }
-$('years').addEventListener('change',()=>{const v=[...$('years').querySelectorAll('input:checked')].map(x=>+x.value);S.years=v.length===YEARS.length?null:v;save();render();progress()});
-function setMans(v,redraw){S.mans=(v&&v.length===MANS.length)?null:v;save();
+$('years').addEventListener('change',()=>{const v=[...$('years').querySelectorAll('input:checked')].map(x=>+x.value);S.years=v.length===YEARS.length?null:v;save();bookUI();render();progress()});
+function bookUI(){const cnt={};for(const q of BANK)if(q.c&&(!S.years||S.years.includes(q.y)))cnt[q.m]=(cnt[q.m]||0)+1;const tot=Object.values(cnt).reduce((a,b)=>a+b,0);
+  const one=S.mans&&S.mans.length===1?S.mans[0]:null,multi=S.mans&&S.mans.length!==1;
+  $('bookSel').innerHTML='<option value="">Todos los libros · examen completo ('+tot+')</option>'+(multi?'<option value="*" selected>Selección de '+S.mans.length+' libros (Ajustes)</option>':'')+MANS.map(m=>'<option value="'+esc(m)+'"'+(m===one?' selected':'')+'>'+esc(m)+' ('+(cnt[m]||0)+')</option>').join('')}
+$('bookSel').onchange=e=>{const v=e.target.value;if(v==='*')return;setMans(v?[v]:null,1)};
+function setMans(v,redraw){S.mans=(v&&v.length===MANS.length)?null:v;save();bookUI();
   $('mSel').textContent=S.mans?'('+S.mans.length+' de '+MANS.length+')':'(todas)';
   if(redraw)$('mans').querySelectorAll('input').forEach(x=>x.checked=!S.mans||S.mans.includes(x.value));
   render();progress()}
@@ -435,7 +441,7 @@ theme();tally();
   BANK=sets.flat();if(S.years)S.years=S.years.filter(y=>YEARS.some(x=>x.y===y));if(S.years&&!S.years.length)S.years=null;
   MANS=[...new Set(BANK.map(q=>q.m).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   if(S.mans){S.mans=S.mans.filter(m=>MANS.includes(m));if(!S.mans.length)S.mans=null}
-  render();progress();viewInit();syncStart();
+  bookUI();render();progress();viewInit();syncStart();
 }catch(e){$('card').innerHTML='<div class="empty">No se pudieron cargar las preguntas ('+esc(e.message)+').</div>'}})();
 }
 </script>
